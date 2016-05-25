@@ -2,7 +2,7 @@
  * This template takes a single argument, a String containing a
  * message to display.
  *@
-@(message: String)(implicit messages: MessagesApi)
+@(message: String)(implicit messages: MessagesApi, requestHeader: RequestHeader)
 
 @*
  * Call the `main` template with two arguments. The first
@@ -11,6 +11,23 @@
  *@
 @main(messages("application.name")) {
 
-    <h1>@message</h1>
+    <div id="tweets"></div>
+    <script type="text/javascript">
+            var tweetSocket = new WebSocket("@routes.Application.tweets().webSocketURL()");
+            tweetSocket.onmessage = function (event) {
+                try{
+                    var data = JSON.parse(event.data);
+                    var tweet = document.createElement("p");
+                    var text = document.createTextNode(data.text);
+                    tweet.appendChild(text);
+                    document.getElementById("tweets" ).appendChild(tweet);
+                }catch(e){
+                    console.error("unable to parse data", event.data)
+                }
+            };
+            tweetSocket.onopen = function() {
+                console.log("connected tweeter feed..")
+            };
+    </script>
 
 }
