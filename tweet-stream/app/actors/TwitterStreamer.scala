@@ -1,8 +1,8 @@
 package actors
 
 import akka.actor._
-import akka.routing._
-import akka.stream.javadsl.Sink
+import akka.stream.scaladsl.{Sink, Flow}
+import akka.util.ByteString
 import play.api.libs.ws.WSClient
 import akka.stream.Materializer
 
@@ -21,10 +21,8 @@ object TwitterStreamer{
 
 class TwitterStreamer(ws: WSClient, url: String, oAuthData: OAuthData, implicit val mat: Materializer) extends Actor with ActorLogging{
 
-	import streams._
-	import context._
 	import TwitterStreamer._
-
+	import context._
 	var streaming = false
 
 	override def preStart(): Unit ={
@@ -39,6 +37,7 @@ class TwitterStreamer(ws: WSClient, url: String, oAuthData: OAuthData, implicit 
 	def startStreaming(router: ActorRef): Unit = {
 		import language.postfixOps
 		if(!streaming) {
+			val bytesToString = Flow[ByteString].map(bytes => bytes.decodeString("UTF-8"))
 			val endPoint = Sink.actorRef[String](router, None)
 			log.info("streaming in progress")
 			ws
@@ -47,7 +46,7 @@ class TwitterStreamer(ws: WSClient, url: String, oAuthData: OAuthData, implicit 
 				.withQueryString("track" -> "cat")
 				.stream()
 				.map { stream =>
-					(stream body) via BytesToString runWith endPoint
+					(stream body) via bytesToString runWith endPoint
 				}
 			streaming = true
 		}
