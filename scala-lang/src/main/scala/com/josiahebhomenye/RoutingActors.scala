@@ -41,7 +41,12 @@ object RoutingActors extends App {
 		router ! new AddRoutee(new ActorRefRoutee(system.actorOf(Props[EchoActor])))
 	}
 
-	scheduler.schedule(3 second, 1 second) { router ! randomWord }
+	scheduler.schedule(3 second, 1 second) {  router ! randomWord }
 	scheduler.schedule(5 minutes, 5 minutes){ router ! new AddRoutee(new ActorRefRoutee(system.actorOf(Props[EchoActor])))}
+
+
+	def act = {
+
+	}
 
 }
